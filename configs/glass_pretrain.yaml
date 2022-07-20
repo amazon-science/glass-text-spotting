@@ -1,0 +1,154 @@
+DATASETS:
+    TRAIN: ("coco_synthtext_train",)
+    TEST: ("coco_total_text_test",)
+
+MODEL:
+#    ATTRIBUTE_ON: False
+#    ROTATED_BOXES_ON: True
+#    ORIENTATION_ON: True
+#    SCRIPT_ON: False
+    # Placeholder for the E2E for Textract
+    RECOGNIZER_ON: True
+    MASK_ON: True
+    ROI_RECOGNIZER_HEAD:
+        NAME: "RecognizerRCNNHeadV3"
+        MAX_WORD_LENGTH: 25
+        CHARACTER_SET: '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!"#$%&''()*+,-./:;<=>?@[\]^_`{|}~ '
+        SENSITIVE: True
+        UNK_SYMBOL_PRED: False
+        IGNORE_EMPTY_TEXT: True
+        POOLER_RESOLUTION_WIDTH: 32 # should be bigger than "MAX_WORD_LENGTH"? default is 14 for mask head
+        POOLER_RESOLUTION_HEIGHT: 8 # should be bigger than "MAX_WORD_LENGTH"? default is 14 for mask head
+        POOLER_TYPE: "ROIAlignRotated"
+        NORM: "SyncBN" #SyncBN
+        IN_FEATURES: [ "p2" , "p3" ]
+        CLASS_IND: 0
+        MAX_BATCH_SIZE: 8
+        LOSS_WEIGHT: 2.0
+        SAMPLING_RATIO: 0
+        RECOGNIZER_HEAD:
+            BACKBONE:
+                NAME: "CNN_V1_1"
+            ENCODER:
+                NAME: "BiLSTMBlockV2"
+                NUM_OF_LAYERS: 2
+            DECODER:
+                NAME: "ASTER_V2"
+
+    ROI_MASK_HEAD:
+        NAME: "RotatedMaskRCNNConvUpsampleHead"
+        NUM_CONV: 4
+        POOLER_RESOLUTION: 14
+        POOLER_TYPE: "ROIAlignRotated"
+        LOSS_WEIGHT: 0.005
+
+    WEIGHTS: "detectron2://ImageNetPretrained/MSRA/R-50.pkl"
+    META_ARCHITECTURE: "GeneralizedRCNN"
+    BACKBONE:
+        NAME: "build_resnet_fpn_backbone"
+        FREEZE_AT: 0
+    RESNETS:
+        RES2_OUT_CHANNELS: 256  # In several maskrcnn config this is 128, default is 256
+        STEM_OUT_CHANNELS: 64  # default 64 / maskrcnn-benchhmark=128
+
+        OUT_FEATURES: ["res2", "res3", "res4", "res5"]
+        DEPTH: 50
+        NORM: "SyncBN"
+    FPN:
+        IN_FEATURES: ["res2", "res3", "res4", "res5"]
+        OUT_CHANNELS: 256  # Default 256 / maskrcnn-benchmark=128
+        NORM: "SyncBN"
+    ANCHOR_GENERATOR:
+        NAME: "RotatedAnchorGenerator"
+        SIZES: [[16], [32], [64], [128], [256]]  # One size for each in feature map
+        ASPECT_RATIOS: [[0.2, 0.5, 1.0]]
+        ANGLES: [[-90, -45, 0, 45]]
+    PROPOSAL_GENERATOR:
+        NAME: "RotatedRPN"
+    RPN:
+        IN_FEATURES: ["p2", "p3", "p4", "p5", "p6"]
+        PRE_NMS_TOPK_TRAIN: 1000  # Per FPN level
+        PRE_NMS_TOPK_TEST: 1000  # Per FPN level
+        BBOX_REG_WEIGHTS: [1.0, 1.0, 1.0, 1.0, 2.0]
+        # Detectron1 uses 2000 proposals per-batch,
+        # (See "modeling/rpn/rpn_outputs.py" for details of this legacy issue)
+        # which is approximately 1000 proposals per-image since the default batch size for FPN is 2.
+        POST_NMS_TOPK_TRAIN: 300
+        POST_NMS_TOPK_TEST: 100
+        BATCH_SIZE_PER_IMAGE: 64
+        BBOX_REG_LOSS_TYPE: "sine_square_loss"
+        SMOOTH_L1_BETA: 0.11  # The same value from maskrcnn-benchmark (1/9)
+    ROI_HEADS:
+        NAME: "MaskRotatedRecognizerHybridHead" #RecognizerHybridHead (RecognizerLocalOnly)
+        CLASS_NAMES: [ 'word' ]
+        IN_FEATURES: [ "p2", "p3", "p4", "p5", "p6" ]
+        NUM_CLASSES: 1
+        NMS_THRESH_TEST: 0.35
+
+    LOCAL_FEATURE_EXTRACTOR:
+        NAME: "ResNetFeatureExtractor"
+        NUM_FEATURES: 256
+    HYBRID_FUSION:
+        NAME: "MultiAspectGCAttention"
+        NUM_FEATURES: 256
+
+    ROI_BOX_HEAD:
+        NAME: "FastRCNNConvFCHead"
+        NUM_FC: 2
+        FC_DIM: 2048  # Inner dimension for the FC, Default is 1024
+        POOLER_RESOLUTION: 7  # 14 seems to produce better results than 7
+        SMOOTH_L1_BETA: 1.0  # The same value from maskrcnn-benchmark (1.0)
+        POOLER_SAMPLING_RATIO: 2
+        POOLER_TYPE: "ROIAlignRotated"
+        NUM_CONV: 0  # Original maskrcnn implementation consisted of just two FC
+        BBOX_REG_WEIGHTS: [ 10.0, 10.0, 5.0, 5.0, 10.0 ]
+        BBOX_REG_LOSS_TYPE: "sine_square_loss"
+        NORM: "SyncBN"
+
+    ROI_ORIENTATION_HEAD:
+        LOSS_WEIGHT: 0.3
+        APPLY_TO_BOXES: True
+        APPLY_TO_BOXES_DURING_TRAINING: True
+
+#DATASETS: ("SynthText")
+
+DATALOADER:
+    # Number of data loading threads
+    NUM_WORKERS: 0  # We cannot multiprocess since the dataset annotations > 4GB
+    # If True, each batch should contain only images for which the aspect ratio
+    # is compatible. This groups portrait images together, and landscape images
+    # are not batched with portrait images.
+    ASPECT_RATIO_GROUPING: False
+SOLVER:
+    IMS_PER_BATCH: 8  # 0 means we find the optimal value for each training
+    BASE_LR: 0.02
+    STEPS: (240000, 450000)
+    MAX_ITER: 600000
+    CHECKPOINT_PERIOD: 2500
+
+INPUT:
+    ROTATION:
+        ENABLED: True
+        # A weighted (toward up) angle choice for cardinal angles
+        ANGLES: [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 90, 90, 270, 270, 180 ]
+    MIN_SIZE_TRAIN_SAMPLING: "range"
+    MIN_SIZE_TRAIN: (800, 1200)
+    # Sample size of smallest side by choice or random selection from range give by
+    # INPUT.MIN_SIZE_TRAIN
+    # Maximum size of the side of the image during training
+    MAX_SIZE_TRAIN: 1200
+    # Size of the smallest side of the image during testing. Set to zero to disable resize in testing.
+    MIN_SIZE_TEST: 1200
+    # Maximum size of the side of the image during testing
+    MAX_SIZE_TEST: 1600
+    # Online augmentations for the input
+
+TEST:
+    EVAL_PERIOD: 2500
+
+
+VERSION: 2
+
+# The period (in terms of steps) for minibatch visualization at train time.
+# Set to 0 to disable.
+VIS_PERIOD: 500

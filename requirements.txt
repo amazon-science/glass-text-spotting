@@ -1,0 +1,9 @@
+numpy>=1.19.5
+matplotlib
+iopath
+pyclipper
+sklearn
+pyclipper
+imageio-ffmpeg
+polygon3
+levenshtein
