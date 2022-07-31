@@ -1,3 +1,6 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: Apache-2.0
+
 import setuptools
 
 with open("README.md", "r") as fh:
@@ -11,6 +14,7 @@ setuptools.setup(
     version="0.1",
     author="Shahar Tsiper",
     author_email="tsiper@amazon.com",
+    license='Apache License 2.0',
     description="GLASS: Global to Local Scene-Text Spotting (ECCV'22)",
     long_description=long_description,
     long_description_content_type="text/markdown",
@@ -19,7 +23,7 @@ setuptools.setup(
     install_requires=requirements,
     classifiers=[
         "Programming Language :: Python :: 3",
-        "License :: Amazon Copyright",
+        "License :: OSI Approved :: Apache Software License",
         "Operating System :: OS Independent",
     ],
     python_requires='>=3.8',
