@@ -1,0 +1,8 @@
+ROOT: /data
+
+DATASETS:
+  - SynthText_coco
+  - totaltext_train_coco
+
+VAL_DATASETS:
+  - totaltext_test_coco

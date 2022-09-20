@@ -18,20 +18,18 @@ from detectron2.modeling.roi_heads.roi_heads import ROI_HEADS_REGISTRY, Standard
 from detectron2.modeling.roi_heads.roi_heads import select_foreground_proposals as mask_select_foreground_proposals
 from detectron2.modeling.roi_heads.rotated_fast_rcnn import RotatedFastRCNNOutputLayers
 from detectron2.structures import ImageList
+from detectron2.structures import Instances, RotatedBoxes, pairwise_iou_rotated, Boxes
 from detectron2.utils.events import get_event_storage
 
-from glass.modeling.recognition.recognizer_pooler_pad import build_recognizer_pooler_pad
-from glass.modeling.recognition.recognizer_head_v2 import build_recognizer_head
-from glass.modeling.fusion.fusion_modules import P2P3Fusion, build_hybrid_feature_fusion
-from glass.modeling.fusion.local_feature_extraction import build_hybrid_feature_extractor
-from glass.modeling.roi_heads.rotated_attribute_fast_rcnn import RotatedAttributeFastRCNNOutputLayers
-from glass.modeling.roi_heads.rotated_attribute_head import add_ground_truth_to_proposals as add_ground_truth_to_proposals_rotated
-from detectron2.structures import Instances, RotatedBoxes, pairwise_iou_rotated, Boxes
-from glass.modeling.structures.boxes import box_to_rbox, rbox_to_box
-from glass.modeling.roi_heads.rotated_attribute_fast_rcnn import overwrite_orientations_on_boxes
+from .fusion_modules import P2P3Fusion, build_hybrid_feature_fusion
+from .local_feature_extraction import build_hybrid_feature_extractor
+from ..recognition.recognizer_head_v2 import build_recognizer_head
+from ..recognition.recognizer_pooler_pad import build_recognizer_pooler_pad
+from ..roi_heads.rotated_fast_rcnn import RotatedFastRCNNOutputLayers
+from ..roi_heads.rotated_fast_rcnn import overwrite_orientations_on_boxes
+from ..roi_heads.rotated_head import add_ground_truth_to_proposals as add_ground_truth_to_proposals_rotated
+from ...structures.boxes import box_to_rbox, rbox_to_box
 
-
-# from RekognitionHieroDetectron2.dev.scale_invariant.postprocess.post_processor_academic import paste_masks_in_image
 
 def select_foreground_and_class_proposals(
         proposals: List[Instances], fg_class_ind: int,
@@ -216,7 +214,7 @@ class MaskRotatedRecognizerHybridHead(StandardROIHeads):
             "box_head": box_head,
             "box_predictor": box_predictor,
         }
-        ret['box_predictor'] = RotatedAttributeFastRCNNOutputLayers(cfg, ret['box_head'].output_shape)
+        ret['box_predictor'] = RotatedFastRCNNOutputLayers(cfg, ret['box_head'].output_shape)
 
         return ret
 
@@ -252,7 +250,7 @@ class MaskRotatedRecognizerHybridHead(StandardROIHeads):
         for proposals_per_image, targets_per_image in zip(proposals, targets):
             has_gt = len(targets_per_image) > 0
             match_quality_matrix = pairwise_iou_rotated(
-                targets_per_image.gt_boxes.tensor, proposals_per_image.proposal_boxes.tensor
+                targets_per_image.gt_boxes, proposals_per_image.proposal_boxes
             )
             matched_idxs, matched_labels = self.proposal_matcher(match_quality_matrix)
             sampled_idxs, gt_classes = self._sample_proposals(

@@ -1,6 +1,7 @@
 # Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 # SPDX-License-Identifier: Apache-2.0
 
+import fvcore.nn.weight_init as weight_init
 import torch
 from detectron2.config import configurable
 from detectron2.utils.registry import Registry
@@ -245,3 +246,41 @@ class Conv1x1(nn.Module):
         x = self.conv(x)
         return x
 
+
+class P2P3Fusion(nn.Module):
+    '''
+    Fuse P2, P3 for global features in the recognizer
+    '''
+    def __init__(self, in_channels):
+        """
+        Args:
+            input_shape (ShapeSpec): shape of the input feature
+        """
+        super().__init__()
+        self.conv1 = nn.Conv2d(
+            in_channels,
+            in_channels,
+            kernel_size=1,
+            stride=1,
+            padding=0,
+            bias=False
+        )
+
+        self.conv2 = nn.Conv2d(
+            in_channels,
+            in_channels,
+            kernel_size=1,
+            stride=1,
+            padding=0,
+            bias=False
+        )
+        self.up = nn.Upsample(scale_factor=2)
+        weight_init.c2_msra_fill(self.conv1)
+        weight_init.c2_msra_fill(self.conv2)
+
+    def forward(self, x1, x2):
+        x1 = self.conv1(x1)
+        x2 = self.conv2(x2)
+        x2 = self.up(x2)
+        x1 = x2 + x1
+        return x1

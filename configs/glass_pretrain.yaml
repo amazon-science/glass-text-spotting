@@ -1,12 +1,6 @@
-DATASETS:
-    TRAIN: ("coco_synthtext_train",)
-    TEST: ("coco_total_text_test",)
-
 MODEL:
-#    ATTRIBUTE_ON: False
-#    ROTATED_BOXES_ON: True
-#    ORIENTATION_ON: True
-#    SCRIPT_ON: False
+    ROTATED_BOXES_ON: True
+    ORIENTATION_ON: True
     # Placeholder for the E2E for Textract
     RECOGNIZER_ON: True
     MASK_ON: True
@@ -23,7 +17,7 @@ MODEL:
         NORM: "SyncBN" #SyncBN
         IN_FEATURES: [ "p2" , "p3" ]
         CLASS_IND: 0
-        MAX_BATCH_SIZE: 8
+        MAX_BATCH_SIZE: 1
         LOSS_WEIGHT: 2.0
         SAMPLING_RATIO: 0
         RECOGNIZER_HEAD:
@@ -110,8 +104,6 @@ MODEL:
         APPLY_TO_BOXES: True
         APPLY_TO_BOXES_DURING_TRAINING: True
 
-#DATASETS: ("SynthText")
-
 DATALOADER:
     # Number of data loading threads
     NUM_WORKERS: 0  # We cannot multiprocess since the dataset annotations > 4GB
@@ -120,7 +112,7 @@ DATALOADER:
     # are not batched with portrait images.
     ASPECT_RATIO_GROUPING: False
 SOLVER:
-    IMS_PER_BATCH: 8  # 0 means we find the optimal value for each training
+    IMS_PER_BATCH: 8
     BASE_LR: 0.02
     STEPS: (240000, 450000)
     MAX_ITER: 600000

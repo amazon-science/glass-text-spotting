@@ -4,26 +4,28 @@
 import argparse
 import torch
 
-from glass.modeling.rotated_rpn import PROPOSAL_GENERATOR_REGISTRY
-from glass.modeling.recognizers_hybrid_head import ROI_HEADS_REGISTRY
-from glass.modeling.rotated_mask_head import ROI_MASK_HEAD_REGISTRY
-from detectron2.engine.defaults import DefaultTrainer
 
 from detectron2.utils import comm
 from detectron2.config import get_cfg
 from detectron2.engine import default_argument_parser, default_setup, launch
 from detectron2.utils.logger import setup_logger
 
-from glass.config import add_e2e_config, add_glass_config
+from glass.config import add_e2e_config, add_glass_config, add_dataset_config, merge_from_dataset_config
+from glass.data.dataset_manager import DatasetManager
+from glass.engine.trainer import Trainer
+
 
 def setup(args):
     """
     Create config and perform basic setups.
     """
     cfg = get_cfg()
-    # cfg.add_custom_options()
+
     add_e2e_config(cfg)
     add_glass_config(cfg)
+    add_dataset_config(cfg)
+    merge_from_dataset_config(cfg, args.datasets)
+
     cfg.merge_from_file(args.config_file)
     cfg.merge_from_list(args.opts)
 
@@ -47,6 +49,8 @@ def setup(args):
         cfg.MODEL.ROI_RECOGNIZER_HEAD.NORM = 'BN' if cfg.MODEL.ROI_MASK_HEAD.NORM == 'SyncBN' else cfg.MODEL.ROI_MASK_HEAD.NORM
 
     cfg.freeze()
+    # Registering the datasets we provided in the datasets config
+    DatasetManager(cfg).register(rotated_boxes=True)
 
     default_setup(cfg, args)
 
@@ -55,7 +59,7 @@ def setup(args):
 
 def main(args):
     cfg = setup(args)
-    trainer = DefaultTrainer(cfg)
+    trainer = Trainer(cfg)
     trainer.resume_or_load(resume=args.resume)
     return trainer.train()
 
@@ -68,6 +72,7 @@ if __name__ == "__main__":
 
     parser: argparse.ArgumentParser = default_argument_parser()
     # Adding our own custom arguments
+    parser.add_argument('--datasets', help='Path to the dataset config', required=True)
     parser.add_argument('--output', help='Path to the output dir', required=True)
     parser.add_argument('--debug', help='Activates debug mode, for PyCharm debugging', action='store_true')
 

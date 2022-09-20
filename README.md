@@ -32,38 +32,64 @@ Our method achieves state-of-the-art results on multiple benchmarks, including t
 Compilation of this package requires Detectron2 ver.>=0.6 package. Installation has been tested on  Linux using using anaconda package management.
 
 Clone the repository into your local machine
-```
+```bash
 git clone https://github.com/amazon-research/glass-text-spotting
 cd glass
 ```
 
-Start a clean virtual environment and setup enviroment variables
-```
+Start a clean virtual environment and setup environment variables
+```bash
 conda create -n glass python=3.8
 conda activate glass
 ```
 
 Install required packages
-```
+```bash
 pip install -e .
 ```
+
+## Running Inference
+
+First, please download any of the following models:
+
+1. Pretrained + fine-tuned on ICDAR'15: [model](https://glass-text-spotting.s3.eu-west-1.amazonaws.com/models/glass_250k_icdar15_fintune.pth)
+2. Pretrained + fine-tuned on TotalText: [model](https://glass-text-spotting.s3.eu-west-1.amazonaws.com/models/glass_250k_full_textocr_finetune.pth)
+3. Pretrained + fine-tuned on all datasets, inc. TextOCR: [model](https://glass-text-spotting.s3.eu-west-1.amazonaws.com/models/glass_250k_full_textocr_finetune.pth)
+
+All of these models can be run together with the default pre-training config
+
+A demo with inference and visualization is WIP, please follow the package for updates.
 
 ## Training
 
 Pretraining on SynthText dataset
-```
-python ./tools/train_glass.py --datasets <path_to_SynthText_dataset> --output <output_path>
+```bash
+python ./tools/train_glass.py  \
+    # The dataset configuration
+  --datasets ./data_configs/data_config_pretrain.yaml \
+  # The architecture config
+  --config ./configs/glass_pretrain \
+  # The output path of the train artifacts
+  --output <output_path>              
 ```
 
 Fine-tuning the model
 ```
-python ./tools/train_glass.py --datasets <path_to_dataset> --resume <pretrained_weights> --output <output_path>
+python ./tools/train_glass.py  \
+   --datasets <path_to_dataset_config> \
+   --resume <pretrained_weights_path> \
+   --output <output_path>
 ```
 
+Additional fine-tuning configs would be uploaded in the near future
 
+### Data Preparation
+
+See [DATA.md](DATA.md) for instructions on data prepation and ingestion.
 
 ### Datasets
-This work supports the following datasets:
+
+The model in this work were trained the following datasets:
 
 1. [SynthText](https://www.robots.ox.ac.uk/~vgg/data/scenetext/)
 2. [ICDAR2013](https://rrc.cvc.uab.es/)
@@ -75,6 +101,15 @@ This work supports the following datasets:
 
 ## Citation
 Please consider citing our work if you find it useful for your research.
+
+```bibtex
+@article{ronen2022glass,
+  title={GLASS: Global to Local Attention for Scene-Text Spotting},
+  author={Ronen, Roi and Tsiper, Shahar and Anschel, Oron and Lavi, Inbal and Markovitz, Amir and Manmatha, R},
+  journal={arXiv preprint arXiv:2208.03364},
+  year={2022}
+}
+```
 
 
 ## License

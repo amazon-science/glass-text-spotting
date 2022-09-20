@@ -1,6 +1,8 @@
 # Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 # SPDX-License-Identifier: Apache-2.0
 
+import os
+import yaml
 from detectron2.config import CfgNode as CN
 
 
@@ -26,6 +28,10 @@ def add_glass_config(cfg):
     """
     Add config for Hybrid head.
     """
+    ## Orientation related fields
+    cfg.MODEL.ROTATED_BOXES_ON = False
+    cfg.MODEL.ORIENTATION_ON = False
+
     ## Localization old Hybrid head config
     cfg.MODEL.ROI_HYBRID_HEAD = CN()
     cfg.MODEL.ROI_HYBRID_HEAD.NAME = "ResBlockHybridHead"
@@ -102,9 +108,6 @@ def add_e2e_config(cfg):
     _C.MODEL.ROI_MASK_HEAD.RECOGNIZER_HEAD.DECODER.NAME = "ASTER"
     _C.MODEL.ROI_MASK_HEAD.RECOGNIZER_HEAD.DECODER.POS_ENC_HEIGHT_WIDTH = None
 
-
-
-
     ################# config duplication #################
     _C.MODEL.ROI_RECOGNIZER_HEAD = CN()
     _C.MODEL.ROI_RECOGNIZER_HEAD.SAMPLE_WORDS_STRATEGY = 'random'  # 'random' | 'long_first'
@@ -151,3 +154,15 @@ def add_e2e_config(cfg):
     _C.MODEL.ROI_RECOGNIZER_HEAD.RECOGNIZER_HEAD.DECODER.POS_ENC_HEIGHT_WIDTH = None
 
     _C.MODEL.ROI_MASK_HEAD.MASK_INFERENCE = False
+
+
+def merge_from_dataset_config(cfg, dataset_config_path):
+    _C = cfg
+    # Parsing the dataset_config_path
+    with open(dataset_config_path, 'r') as fp:
+        dataset_config = yaml.safe_load(fp)
+    # Updating the fields in the config
+    _C.DATASETS.TRAIN = dataset_config.get('DATASETS', [])
+    _C.DATASETS.TEST = dataset_config.get('VAL_DATASETS', [])
+    _C.DATASETS.ROOT = dataset_config.get('ROOT', '.')
+    _C.DATASETS.CONFIG = os.path.basename(dataset_config_path)
