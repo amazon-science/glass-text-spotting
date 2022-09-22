@@ -53,7 +53,7 @@ pip install -e .
 First, please download any of the following models:
 
 1. Pretrained + fine-tuned on ICDAR'15: [model](https://glass-text-spotting.s3.eu-west-1.amazonaws.com/models/glass_250k_icdar15_fintune.pth)
-2. Pretrained + fine-tuned on TotalText: [model](https://glass-text-spotting.s3.eu-west-1.amazonaws.com/models/glass_250k_full_textocr_finetune.pth)
+2. Pretrained + fine-tuned on TotalText: [model](https://glass-text-spotting.s3.eu-west-1.amazonaws.com/models/glass_250k_totaltext_finetune.pth)
 3. Pretrained + fine-tuned on all datasets, inc. TextOCR: [model](https://glass-text-spotting.s3.eu-west-1.amazonaws.com/models/glass_250k_full_textocr_finetune.pth)
 
 All of these models can be run together with the default pre-training config
