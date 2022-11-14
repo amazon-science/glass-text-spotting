@@ -355,9 +355,7 @@ class RotatedFastRCNNOutputs:
         scores = self.predict_probs()
         orientations = self.predict_orientations()
 
-        # boxes = tuple(boxes[0][:, :5])
         # # We apply the orientation prediction directly to the predicted box
-        self.apply_orientation_to_boxes = False
         if self.apply_orientation_to_boxes:
             oriented_boxes = list()
             for box, orientation in zip(boxes, orientations):
@@ -365,6 +363,8 @@ class RotatedFastRCNNOutputs:
                 oriented_box = overwrite_orientations_on_boxes(box, orientation_values)
                 oriented_boxes.append(oriented_box)
             boxes = tuple(oriented_boxes)
+        else:
+            boxes = [boxes]
 
         image_shapes = self.image_shapes
 
@@ -478,11 +478,17 @@ class RotatedFastRCNNOutputs:
         return loss_box_reg
 
     def predict_probs(self):
-        """
-        Deprecated
-        """
         probs = F.softmax(self.pred_class_logits, dim=-1)
         return probs.split(self.num_preds_per_image, dim=0)
+
+    def predict_orientations(self):
+        if self.pred_orientation_logits is not None:
+            orientation_probs = F.softmax(self.pred_orientation_logits, dim=-1)
+            orientations_max = orientation_probs.max(dim=1)
+            orientations = torch.stack((orientations_max[1], orientations_max[0]), 1) # tensor with prediction, score
+            return orientations.split(self.num_preds_per_image, dim=0)
+        else:
+            return [None] * len(self.image_shapes)
 
 
 class RotatedFastRCNNOutputLayers(nn.Module):
@@ -607,7 +613,7 @@ class RotatedFastRCNNOutputLayers(nn.Module):
         ).losses()
 
     def inference(self, predictions, proposals):
-        scores, proposal_deltas, att_scores, orientation_scores, script_scores = predictions
+        scores, proposal_deltas, orientation_scores = predictions
         return RotatedFastRCNNOutputs(
             self.box2box_transform, scores, proposal_deltas, orientation_scores, proposals,
             self.smooth_l1_beta, self.box_reg_loss_type,
@@ -616,13 +622,18 @@ class RotatedFastRCNNOutputLayers(nn.Module):
 
     def predict_boxes(self, predictions, proposals):
         # scores, proposal_deltas, att_scores, orientation_scores = predictions
-        scores, proposal_deltas, att_scores, orientation_scores, script_scores = predictions
+        scores, proposal_deltas, orientation_scores = predictions
         return RotatedFastRCNNOutputs(
             self.box2box_transform, scores, proposal_deltas, orientation_scores, proposals,
             self.smooth_l1_beta, self.box_reg_loss_type,
             self.class_names, self.orientation_loss_weight
         ).predict_boxes()
 
-    def predict_probs(self):
-        probs = F.softmax(self.pred_class_logits, dim=-1)
-        return probs.split(self.num_preds_per_image, dim=0)
+    def predict_probs(self, predictions, proposals):
+        scores, proposal_deltas, att_scores, orientation_scores = predictions
+        return RotatedFastRCNNOutputs(
+            self.box2box_transform, scores, proposal_deltas, orientation_scores, proposals,
+            self.smooth_l1_beta, self.box_reg_loss_type,
+            self.class_names, self.orientation_loss_weight
+        ).predict_probs()
+

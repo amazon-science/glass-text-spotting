@@ -1,11 +1,13 @@
 import detectron2 # noqa
 
 # These imports are used for d2 registry updates
+from glass.modeling.meta_arch.glass_rcnn import META_ARCH_REGISTRY  # noqa
 from glass.modeling.proposal_generator.rotated_rpn import PROPOSAL_GENERATOR_REGISTRY # noqa
 from glass.modeling.fusion.local_feature_extraction import LOCAL_FEATURE_EXTRACTOR_REGISTRY # noqa
 from glass.modeling.fusion.recognizers_hybrid_head import ROI_HEADS_REGISTRY # noqa
 from glass.modeling.recognition.recognizer_head_v2 import ROI_RECOGNIZER_HEAD_REGISTRY # noqa
 from glass.modeling.roi_heads.rotated_mask_head import ROI_MASK_HEAD_REGISTRY # noqa
+
 
 # Replacing the resize transform with a fast variant
 from glass.data.transforms.transform import FastResizeTransform
