@@ -1,0 +1,456 @@
+CUDNN_BENCHMARK: false
+DATALOADER:
+  ASPECT_RATIO_GROUPING: false
+  FILTER_EMPTY_ANNOTATIONS: true
+  NUM_WORKERS: 1
+  SAMPLER_TRAIN: TrainingSampler
+DATASETS:
+  PRECOMPUTED_PROPOSAL_TOPK_TEST: 1000
+  PRECOMPUTED_PROPOSAL_TOPK_TRAIN: 2000
+  PROPOSAL_FILES_TEST: []
+  PROPOSAL_FILES_TRAIN: []
+  TEST:
+  - totaltext_test_coco
+  TRAIN:
+  - SynthText_coco
+  - totaltext_train_coco
+GLOBAL:
+  HACK: 1.0
+INPUT:
+  FORMAT: BGR
+  MASK_FORMAT: polygon
+  MAX_SIZE_TEST: 1600
+  MAX_SIZE_TRAIN: 1440
+  MAX_UPSCALE_RATIO: 2
+  MIN_SIZE_TEST: 1200
+  MIN_SIZE_TRAIN:
+  - 800
+  - 1200
+  MIN_SIZE_TRAIN_SAMPLING: range
+  RANDOM_FLIP: horizontal
+  ROTATION:
+    ANGLES:
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    - 90
+    - 90
+    - 270
+    - 270
+    - 180
+    ENABLED: true
+MODEL:
+  ANCHOR_GENERATOR:
+    ANGLES:
+    - - -90
+      - -45
+      - 0
+      - 45
+    ASPECT_RATIOS:
+    - - 0.2
+      - 0.5
+      - 1.0
+    NAME: RotatedAnchorGenerator
+    OFFSET: 0.0
+    SIZES:
+    - - 16
+    - - 32
+    - - 64
+    - - 128
+    - - 256
+  BACKBONE:
+    FREEZE_AT: 0
+    NAME: build_resnet_fpn_backbone
+  DEVICE: cuda
+  FILTERED_RPN:
+    IGNORE_TEXT:
+    - '###'
+    - ''
+  FPN:
+    FUSE_TYPE: sum
+    IN_FEATURES:
+    - res2
+    - res3
+    - res4
+    - res5
+    NORM: SyncBN
+    OUT_CHANNELS: 256
+  HYBRID_FUSION:
+    FUSION_TYPE: channel_add
+    HEADERS: 8
+    NAME: MultiAspectGCAttention
+    NUM_FEATURES: 256
+    RATIO: 0.5
+  KEYPOINT_ON: false
+  LOAD_PROPOSALS: false
+  LOCAL_FEATURE_EXTRACTOR:
+    NAME: ResNetFeatureExtractor
+    NUM_FEATURES: 256
+  MASK_ON: true
+  META_ARCHITECTURE: GlassRCNN
+  ORIENTATION_ON: true
+  PANOPTIC_FPN:
+    COMBINE:
+      ENABLED: true
+      INSTANCES_CONFIDENCE_THRESH: 0.5
+      OVERLAP_THRESH: 0.5
+      STUFF_AREA_LIMIT: 4096
+    INSTANCE_LOSS_WEIGHT: 1.0
+  PIXEL_MEAN:
+  - 103.53
+  - 116.28
+  - 123.675
+  PIXEL_STD:
+  - 1.0
+  - 1.0
+  - 1.0
+  PROPOSAL_GENERATOR:
+    MIN_SIZE: 0
+    NAME: RotatedRPN
+  RECOGNIZER_ON: true
+  RESNETS:
+    DEFORM_MODULATED: false
+    DEFORM_NUM_GROUPS: 1
+    DEFORM_ON_PER_STAGE:
+    - false
+    - false
+    - false
+    - false
+    DEPTH: 50
+    NORM: SyncBN
+    NUM_GROUPS: 1
+    OUT_FEATURES:
+    - res2
+    - res3
+    - res4
+    - res5
+    RES2_OUT_CHANNELS: 256
+    RES5_DILATION: 1
+    STEM_OUT_CHANNELS: 64
+    STRIDE_IN_1X1: true
+    WIDTH_PER_GROUP: 64
+  RETINANET:
+    BBOX_REG_LOSS_TYPE: smooth_l1
+    BBOX_REG_WEIGHTS:
+    - 1.0
+    - 1.0
+    - 1.0
+    - 1.0
+    FOCAL_LOSS_ALPHA: 0.25
+    FOCAL_LOSS_GAMMA: 2.0
+    IN_FEATURES:
+    - p3
+    - p4
+    - p5
+    - p6
+    - p7
+    IOU_LABELS:
+    - 0
+    - -1
+    - 1
+    IOU_THRESHOLDS:
+    - 0.4
+    - 0.5
+    NMS_THRESH_TEST: 0.5
+    NORM: ''
+    NUM_CLASSES: 80
+    NUM_CONVS: 4
+    PRIOR_PROB: 0.01
+    SCORE_THRESH_TEST: 0.05
+    SMOOTH_L1_LOSS_BETA: 0.1
+    TOPK_CANDIDATES_TEST: 1000
+  ROI_BOX_CASCADE_HEAD:
+    BBOX_REG_WEIGHTS:
+    - - 10.0
+      - 10.0
+      - 5.0
+      - 5.0
+    - - 20.0
+      - 20.0
+      - 10.0
+      - 10.0
+    - - 30.0
+      - 30.0
+      - 15.0
+      - 15.0
+    IOUS:
+    - 0.5
+    - 0.6
+    - 0.7
+  ROI_BOX_HEAD:
+    BBOX_REG_LOSS_TYPE: sine_square_loss
+    BBOX_REG_LOSS_WEIGHT: 1.0
+    BBOX_REG_WEIGHTS:
+    - 10.0
+    - 10.0
+    - 5.0
+    - 5.0
+    - 10.0
+    CLS_AGNOSTIC_BBOX_REG: false
+    CONV_DIM: 256
+    FC_DIM: 2048
+    NAME: FastRCNNConvFCHead
+    NORM: SyncBN
+    NUM_CONV: 0
+    NUM_FC: 2
+    POOLER_RESOLUTION: 7
+    POOLER_SAMPLING_RATIO: 2
+    POOLER_TYPE: ROIAlignRotated
+    SMOOTH_L1_BETA: 1.0
+    TRAIN_ON_PRED_BOXES: false
+  ROI_HEADS:
+    BATCH_SIZE_PER_IMAGE: 512
+    CLASS_NAMES:
+    - word
+    IN_FEATURES:
+    - p2
+    - p3
+    - p4
+    - p5
+    - p6
+    IOU_LABELS:
+    - 0
+    - 1
+    IOU_THRESHOLDS:
+    - 0.5
+    NAME: MaskRotatedRecognizerHybridHead
+    NMS_THRESH_TEST: 0.35
+    NUM_CLASSES: 1
+    POSITIVE_FRACTION: 0.25
+    PROPOSAL_APPEND_GT: true
+    SCORE_THRESH_TEST: 0.05
+  ROI_HYBRID_HEAD:
+    DEPTH: 3
+    NAME: ResBlockHybridHead
+    NORM_IMG_CROPS: false
+    NUM_FEATURES: 256
+    POOLER_RESOLUTION: 64
+  ROI_KEYPOINT_HEAD:
+    CONV_DIMS:
+    - 512
+    - 512
+    - 512
+    - 512
+    - 512
+    - 512
+    - 512
+    - 512
+    LOSS_WEIGHT: 1.0
+    MIN_KEYPOINTS_PER_IMAGE: 1
+    NAME: KRCNNConvDeconvUpsampleHead
+    NORMALIZE_LOSS_BY_VISIBLE_KEYPOINTS: true
+    NUM_KEYPOINTS: 17
+    POOLER_RESOLUTION: 14
+    POOLER_SAMPLING_RATIO: 0
+    POOLER_TYPE: ROIAlignV2
+  ROI_MASK_HEAD:
+    CLASS_IND: 0
+    CLS_AGNOSTIC_MASK: false
+    CONV_DIM: 256
+    IGNORE_EMPTY_TEXT: true
+    IGNORE_TEXT:
+    - '###'
+    IN_FEATURES:
+    - p2
+    - p3
+    - p4
+    - p5
+    - p6
+    LABELS_TYPE: attention
+    LOSS_WEIGHT: 0.005
+    MASK_INFERENCE: false
+    MAX_BATCH_SIZE: 256
+    MAX_WORD_LENGTH: 50
+    NAME: RotatedMaskRCNNConvUpsampleHead
+    NORM: ''
+    NUM_CONV: 4
+    PAD_SAMPLER: ''
+    POOLER_RESOLUTION: 14
+    POOLER_RESOLUTION_HEIGHT: 32
+    POOLER_RESOLUTION_WIDTH: 32
+    POOLER_SAMPLING_RATIO: 0
+    POOLER_TYPE: ROIAlignRotated
+    RECOGNIZER_HEAD:
+      BACKBONE:
+        NAME: CNN_V1
+      DECODER:
+        NAME: ASTER
+        POS_ENC_HEIGHT_WIDTH: null
+      ENCODER:
+        HEIGHT_REDUCTION: mean
+        NAME: BiLSTMBlock
+        NUM_OF_LAYERS: 2
+        N_HEAD: 8
+      POOLER_PAD:
+        NAME: ''
+    SAMPLE_WORDS_STRATEGY: random
+    SAMPLE_WORDS_STRATEGY_PROB: 0.3
+    SENSITIVE: true
+    UNK_SYMBOL_PRED: false
+  ROI_ORIENTATION_HEAD:
+    APPLY_TO_BOXES: true
+    LOSS_WEIGHT: 0.3
+  ROI_RECOGNIZER_HEAD:
+    CHARACTER_SET: '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!"#$%&''()*+,-./:;<=>?@[\]^_`{|}~ '
+    CLASS_IND: 0
+    CONV_DIM: 256
+    IGNORE_EMPTY_TEXT: true
+    IGNORE_TEXT:
+    - '###'
+    IN_FEATURES:
+    - p2
+    - p3
+    LABELS_TYPE: attention
+    LOSS_WEIGHT: 2.0
+    MAX_BATCH_SIZE: 8
+    MAX_WORD_LENGTH: 25
+    NAME: RecognizerRCNNHeadV3
+    NORM: BN
+    PAD_SAMPLER: ''
+    POOLER_RESOLUTION_HEIGHT: 8
+    POOLER_RESOLUTION_WIDTH: 32
+    POOLER_SAMPLING_RATIO: 0
+    POOLER_TYPE: ROIAlignRotated
+    RECOGNIZER_HEAD:
+      BACKBONE:
+        NAME: CNN_V1_1
+      DECODER:
+        NAME: ASTER_V2
+        POS_ENC_HEIGHT_WIDTH: null
+      ENCODER:
+        HEIGHT_REDUCTION: mean
+        NAME: BiLSTMBlockV2
+        NUM_OF_LAYERS: 2
+        N_HEAD: 8
+      POOLER_PAD:
+        NAME: ''
+    SAMPLE_WORDS_STRATEGY: random
+    SAMPLE_WORDS_STRATEGY_PROB: 0.3
+    SAMPLING_RATIO: 0
+    SENSITIVE: true
+    UNK_SYMBOL_PRED: false
+  ROTATED_BOXES_ON: true
+  RPN:
+    BATCH_SIZE_PER_IMAGE: 64
+    BBOX_REG_LOSS_TYPE: sine_square_loss
+    BBOX_REG_LOSS_WEIGHT: 1.0
+    BBOX_REG_WEIGHTS:
+    - 1.0
+    - 1.0
+    - 1.0
+    - 1.0
+    - 2.0
+    BOUNDARY_THRESH: -1
+    HEAD_NAME: StandardRPNHead
+    IN_FEATURES:
+    - p2
+    - p3
+    - p4
+    - p5
+    - p6
+    IOU_LABELS:
+    - 0
+    - -1
+    - 1
+    IOU_THRESHOLDS:
+    - 0.3
+    - 0.7
+    LOSS_WEIGHT: 1.0
+    NMS_THRESH: 0.7
+    POSITIVE_FRACTION: 0.5
+    POST_NMS_TOPK_TEST: 100
+    POST_NMS_TOPK_TRAIN: 300
+    PRE_NMS_TOPK_TEST: 1000
+    PRE_NMS_TOPK_TRAIN: 1000
+    SMOOTH_L1_BETA: 0.11
+  WEIGHTS: /hiero_efs/HieroUsers/roironen/experiments/E2E_Hybrid_EXP2/2021-08-31-1558_RotatedMask_loss_0.005_Hybrid_GCAttention/model_0599999.pth
+OUTPUT_DIR: ./
+POST_PROCESSING:
+  BOX_INFLATE_RATIO: 0.05
+  BOX_PX_PADDING:
+  - 0
+  - 0
+  - 0
+  - 0
+  LOW_CONFIDENCE: 0.01
+  MAX_ANGLE_DIFF: 15
+  MAX_OUTSIDE_BOX_MARGIN_PX: 5
+  MERGE_IOA_THRESH: 0.3
+  MIN_BOX_DIMENSION: 2
+  NAME: PostProcessorAcademic
+  OVERLAP_WIDTH_PER_HEIGHT_THRESH: 0.3
+  PAIRS_HEIGHT_RATIO_THRESH: 0.35
+  SCORE_THRESHOLD: 0.25
+  SKIP_ALL: false
+  VALID_CONFIDENCE: 0.15
+SEED: -1
+SOLVER:
+  AMP:
+    ENABLED: false
+  BASE_LR: 0.01
+  BIAS_LR_FACTOR: 1.0
+  CHECKPOINT_PERIOD: 2500
+  CLIP_GRADIENTS:
+    CLIP_TYPE: value
+    CLIP_VALUE: 1.0
+    ENABLED: false
+    NORM_TYPE: 2.0
+  GAMMA: 0.6
+  IMS_PER_BATCH: 1
+  LR_SCHEDULER_NAME: WarmupMultiStepLR
+  MAX_ITER: 250000
+  MOMENTUM: 0.9
+  NESTEROV: false
+  REFERENCE_WORLD_SIZE: 0
+  STEPS:
+  - 100000
+  - 120000
+  - 140000
+  - 160000
+  - 180000
+  - 200000
+  - 220000
+  - 240000
+  WARMUP_FACTOR: 0.001
+  WARMUP_ITERS: 0
+  WARMUP_METHOD: linear
+  WEIGHT_DECAY: 0.0001
+  WEIGHT_DECAY_BIAS: 0.0001
+  WEIGHT_DECAY_NORM: 0.0
+TEST:
+  AUG:
+    ENABLED: false
+    FLIP: true
+    MAX_SIZE: 4000
+    MIN_SIZES:
+    - 400
+    - 500
+    - 600
+    - 700
+    - 800
+    - 900
+    - 1000
+    - 1100
+    - 1200
+  DETECTIONS_PER_IMAGE: 100
+  EVAL_PERIOD: 2500
+  EXPECTED_RESULTS: []
+  IOU_THRESHOLD: 0.5
+  PRECISE_BN:
+    ENABLED: false
+    NUM_ITER: 200
+  DONT_CARE_GT_LABELS:
+  - '###'
+  - ''
+  USE_FILTERED_METRICS: true
+VERSION: 2
+VIS_PERIOD: 500

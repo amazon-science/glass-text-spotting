@@ -52,9 +52,9 @@ pip install -e .
 
 First, please download any of the following models:
 
-1. Pretrained + fine-tuned on ICDAR'15: [IC'15 Model](https://glass-text-spotting.s3.eu-west-1.amazonaws.com/models/glass_250k_icdar15_fintune.pth), [IC'15 config](https://glass-text-spotting.s3.eu-west-1.amazonaws.com/configs/glass_config_icdar15.yaml)
-2. Pretrained + fine-tuned on TotalText: [TotalText Model](https://glass-text-spotting.s3.eu-west-1.amazonaws.com/models/glass_250k_totaltext_finetune.pth), [TotalText config](https://glass-text-spotting.s3.eu-west-1.amazonaws.com/configs/glass_config_totaltext.yaml)
-3. Pretrained + fine-tuned on all datasets, inc. TextOCR: [TextOCR Model](https://glass-text-spotting.s3.eu-west-1.amazonaws.com/models/glass_250k_full_textocr_finetune.pth), [TextOCR config](https://glass-text-spotting.s3.eu-west-1.amazonaws.com/configs/glass_config_textocr.yaml)
+1. Pretrained + fine-tuned on ICDAR'15: [IC'15 Model](https://glass-text-spotting.s3.eu-west-1.amazonaws.com/models/glass_250k_icdar15_fintune.pth), [IC'15 config](configs/glass_finetune_icdar15.yaml)
+2. Pretrained + fine-tuned on TotalText: [TotalText Model](https://glass-text-spotting.s3.eu-west-1.amazonaws.com/models/glass_250k_totaltext_finetune.pth), [TotalText config](configs/glass_finetune_totaltext.yaml)
+3. Pretrained + fine-tuned on all datasets, inc. TextOCR: [TextOCR Model](https://glass-text-spotting.s3.eu-west-1.amazonaws.com/models/glass_250k_full_textocr_finetune.pth), [TextOCR config](configs/glass_finetune_textocr.yaml)
 
 All of these models can be run together with the default pre-training config
 
