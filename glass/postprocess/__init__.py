@@ -1,0 +1,1 @@
+from .post_processor_rotated_boxes import POST_PROCESSOR_REGISTRY, build_post_processor

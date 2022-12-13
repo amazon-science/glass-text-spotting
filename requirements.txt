@@ -6,4 +6,5 @@ sklearn
 pyclipper
 imageio-ffmpeg
 polygon3
+plotly
 levenshtein

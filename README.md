@@ -7,6 +7,10 @@ This is a PyTorch implementation of the following paper:
 
 Roi Ronen*, Shahar Tsiper*, Oron Anschel, Inbal Lavi, Amir Markovitz and R. Manmatha.
 
+[Paper](https://arxiv.org/pdf/2208.03364) 
+| [Pretrained Models](#Models-and-Configs) | 
+|  [Citation](#citation) | [Demo](#demo)
+
 ![Intro Figure](readme/architecture.png)
 
 **Abstract:**<br>
@@ -29,7 +33,8 @@ Our method achieves state-of-the-art results on multiple benchmarks, including t
 
 
 ## Installation
-Compilation of this package requires Detectron2 ver.>=0.6 package. Installation has been tested on  Linux using using anaconda package management.
+Compilation of this package requires Detectron2==0.6 package.
+Installation has been tested on Linux using using anaconda package management.
 
 Clone the repository into your local machine
 ```bash
@@ -50,15 +55,26 @@ pip install -e .
 
 ## Running Inference
 
-First, please download any of the following models:
+### Demo
 
-1. Pretrained + fine-tuned on ICDAR'15: [IC'15 Model](https://glass-text-spotting.s3.eu-west-1.amazonaws.com/models/glass_250k_icdar15_fintune.pth), [IC'15 config](configs/glass_finetune_icdar15.yaml)
-2. Pretrained + fine-tuned on TotalText: [TotalText Model](https://glass-text-spotting.s3.eu-west-1.amazonaws.com/models/glass_250k_totaltext_finetune.pth), [TotalText config](configs/glass_finetune_totaltext.yaml)
-3. Pretrained + fine-tuned on all datasets, inc. TextOCR: [TextOCR Model](https://glass-text-spotting.s3.eu-west-1.amazonaws.com/models/glass_250k_full_textocr_finetune.pth), [TextOCR config](configs/glass_finetune_textocr.yaml)
+A Lab Collab demo is available for running inference:
 
-All of these models can be run together with the default pre-training config
+<h3 id="demo"> 
+    <a href="https://colab.research.google.com/github/amazon-science/glass-text-spotting/blob/master/glass_demo.ipynb" target="_parent">
+    Run Demo! <img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/>
+    </a> 
+</h3>
 
-A demo with inference and visualization is WIP, please follow the package for updates.
+
+### Models and Configs
+
+You can check out all of our fine-tuned models and configs here:
+
+1. Pretrained + fine-tuned on ICDAR'15: [IC'15 Model](https://glass-text-spotting.s3.eu-west-1.amazonaws.com/models/glass_250k_icdar15_fintune.pth), [IC'15 config](https://glass-text-spotting.s3.eu-west-1.amazonaws.com/configs/glass_config_icdar15.yaml)
+2. Pretrained + fine-tuned on TotalText: [TotalText Model](https://glass-text-spotting.s3.eu-west-1.amazonaws.com/models/glass_250k_totaltext_finetune.pth), [TotalText config](https://glass-text-spotting.s3.eu-west-1.amazonaws.com/configs/glass_config_totaltext.yaml)
+3. Pretrained + fine-tuned on all datasets, inc. TextOCR: [TextOCR Model](https://glass-text-spotting.s3.eu-west-1.amazonaws.com/models/glass_250k_full_textocr_finetune.pth), [TextOCR config](https://glass-text-spotting.s3.eu-west-1.amazonaws.com/configs/glass_config_textocr.yaml)
+
+All of these models can be run together with the default pre-training config, or invoked using the demo above.
 
 ## Training
 
@@ -83,9 +99,12 @@ python ./tools/train_glass.py  \
 
 Additional fine-tuning configs would be uploaded in the near future
 
+## Data
+
 ### Data Preparation
 
 See [DATA.md](DATA.md) for instructions on data prepation and ingestion.
+
 
 ### Datasets
 
@@ -98,6 +117,12 @@ The model in this work were trained the following datasets:
 5. [TextOCR](https://textvqa.org/textocr/dataset/)
 
 
+## Updates
+
+* December 12th, 2022 - Added Lab Collab demo, numerous bug fixes and improvments, and code cleanup
+* November 14th, 2022 - Evalutaion code and updated post-processing code is included
+* September 20th, 2022 - Including the models, additional components for rotated box training and bug fixes
+* July 10th, 2022 - Initial commit, getting things ready towards ECCV'22, main training code and architecture are included
 
 ## Citation
 Please consider citing our work if you find it useful for your research.
@@ -111,7 +136,9 @@ Please consider citing our work if you find it useful for your research.
 }
 ```
 
+## Contribution and License
 
-## License
+
+See [CONTRIBUTING](CONTRIBUTING.md) for more information on contributions.
 
 This project is licensed under the Apache-2.0 License.

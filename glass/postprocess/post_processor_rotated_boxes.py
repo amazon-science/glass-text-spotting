@@ -6,30 +6,44 @@ import numpy as np
 import torch
 from detectron2.layers.nms import nms_rotated
 from detectron2.structures.instances import Instances
+from detectron2.utils.registry import Registry
 
-from .post_processor import POST_PROCESSOR_REGISTRY
-from ..structures.boxes import pairwise_ioa
+from ..structures.boxes import pairwise_ioa_rotated
+
+POST_PROCESSOR_REGISTRY = Registry("POST_PROCESSOR")
+POST_PROCESSOR_REGISTRY.__doc__ = """
+Registry for the post processor algorithms used following the detection process by the model
+Usually accustomed to the output type, axis-aligned-boxes/rotated-boxes/etc...
+
+Each returned object should have the same `__init__` signature, as well as a `process()` method called from the 
+d2 runner module.
+"""
+
+
+def build_post_processor(cfg, *args, **kwargs):
+    """
+    Build a post-processing component defined by `cfg.POST_PROCESSING.NAME`.
+    """
+    name = cfg.POST_PROCESSING.NAME
+
+    return POST_PROCESSOR_REGISTRY.get(name)(cfg, *args, **kwargs)
 
 
 @POST_PROCESSOR_REGISTRY.register()
 class PostProcessorRotatedBoxes:
 
-    def __init__(self, cfg, *args, **kwargs):
-        super().__init__(cfg, *args, **kwargs)
-
-    def __init__(self, cfg, verbose=True):
+    def __init__(self, cfg):
         self.logger = logging.getLogger(__name__)
         self.skip_all = cfg.POST_PROCESSING.SKIP_ALL
 
         # Below this threshold we will NEVER consider merging two boxes, has to be bigger than 0 for numerical reasons
         self.minimal_ioa_thresh = 0.01
-        self.verbose = verbose
 
         self.class_names = list(cfg.MODEL.ROI_HEADS.CLASS_NAMES)
         self.word_ind = self.class_names.index('word')
 
         # Score thresholds for each of our classes printed accordingly
-        self.score_threshold = cfg.POST_PROCESSING.SCORE_THRESHOLD
+        self.detect_threshold = cfg.POST_PROCESSING.DETECT_THRESHOLD
 
         # We drop boxes that have less than this number of pixels in one of their dimensions
         self.min_box_dim = cfg.POST_PROCESSING.MIN_BOX_DIMENSION
@@ -44,16 +58,14 @@ class PostProcessorRotatedBoxes:
         self.max_input_size = cfg.INPUT.MAX_SIZE_TEST
         # Boxes above this threshold are considered valid
         self.valid_score = cfg.POST_PROCESSING.VALID_CONFIDENCE
-        assert self.valid_score <= self.score_threshold, \
+        assert self.valid_score <= self.detect_threshold, \
             "Valid score threshold must be smaller than the other class thresholds, to prevent word-in-word  cases"
 
         self.max_angle_diff = cfg.POST_PROCESSING.MAX_ANGLE_DIFF
 
-    def __call__(self, preds: Instances, scale_ratio=1, **kwargs):
+    def __call__(self, preds: Instances):
         """
-
-        :param preds: The word predictions
-        :param scale_ratio: The scale ratio that the image is transformed by before model inference
+        :param preds: The word predictions as given from the D2 inference pipeline
         :return:
         """
         if self.skip_all:
@@ -64,11 +76,10 @@ class PostProcessorRotatedBoxes:
         # Filtering out boxes that are smaller than self.min_box_dim
         preds = self.filter_small_boxes(preds)
 
-        preds = self.post_process_word_preds(preds, scale_ratio=scale_ratio)
+        preds = self.post_process_word_preds(preds)
 
-        if self.verbose:
-            self.logger.info(f'Merged and removed {len_prev_word_preds - len(preds)} Words')
-            self.logger.info(f'Post-Process Word Time: {(time.perf_counter() - word_start_time) * 1e3:.1f} ms')
+        self.logger.info(f'Merged and removed {len(preds)} Words')
+        self.logger.info(f'Post-Process Word Time: {(time.perf_counter() - word_start_time) * 1e3:.1f} ms')
 
         # Updating the polygons
         preds.pred_polygons = self.boxes_to_polygons(preds.pred_boxes.tensor)
@@ -82,19 +93,17 @@ class PostProcessorRotatedBoxes:
         min_box_dim = torch.min(boxes[:, 2], boxes[:, 3])
         return preds[min_box_dim >= self.min_box_dim]
 
-    def post_process_word_preds(self, word_preds: Instances, scale_ratio=1):
+    def post_process_word_preds(self, preds: Instances):
 
         # another round of merging for all the word boxes if the terms for printed are met
         # this time we take the stricter parameter for each merge type
-        word_preds = word_preds[word_preds.scores >= self.valid_score]
-        word_preds = self.merge_intersecting_boxes(
-            word_preds,
+        preds = preds[preds.scores >= self.valid_score]
+        preds = self.merge_intersecting_boxes(
+            preds,
             ioa_threshold=self.merge_ioa_thresh,
-            pairs_height_ratio_thresh=self.pairs_height_ratio_thresh,
-        )
-        word_preds = word_preds[word_preds.scores >= self.score_threshold]
-
-        return word_preds
+            pairs_height_ratio_thresh=self.pairs_height_ratio_thresh)
+        preds = preds[preds.scores >= self.detect_threshold]
+        return preds
 
     def merge_intersecting_boxes(self, preds: Instances,
                                  ioa_threshold: float,
@@ -107,8 +116,8 @@ class PostProcessorRotatedBoxes:
         while True:
 
             # These overlapping boxes we want to merge
-            ioa = pairwise_ioa(preds.pred_boxes, preds.pred_boxes)  # NxN symmetric IoA matrix
             boxes = preds.pred_boxes.tensor
+            ioa = pairwise_ioa_rotated(boxes, boxes)  # NxN symmetric IoA matrix
             scores = preds.scores
 
             # We take the row and column indices only from the upper diagonal to avoid duplicate

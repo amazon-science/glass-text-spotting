@@ -174,8 +174,8 @@ def add_post_process_config(cfg):
     # Post-Processing Constants:
     # ===========================
     cfg.POST_PROCESSING = CN()
-    cfg.POST_PROCESSING.NAME = 'PostProcessor'
-    # Master flag for skipping everything (@amirmak):
+    cfg.POST_PROCESSING.NAME = 'PostProcessorAcademic'
+    # Master flag for skipping everything
     cfg.POST_PROCESSING.SKIP_ALL = False
     # How much to inflate the boxes in percentage
     cfg.POST_PROCESSING.BOX_INFLATE_RATIO = 0.05
@@ -186,7 +186,7 @@ def add_post_process_config(cfg):
     # We drop boxes that have less than this number of pixels in one of their dimensions
     cfg.POST_PROCESSING.MIN_BOX_DIMENSION = 2
 
-    # We drop boxes that span by more than this amount of pixels outside of the image regions
+    # We drop boxes that span by more than this amount of pixels outside the image regions
     cfg.POST_PROCESSING.MAX_OUTSIDE_BOX_MARGIN_PX = 5
 
     # Above this IoU threshold we merge two boxes (if the additional merge conditions are met)
@@ -206,8 +206,9 @@ def add_post_process_config(cfg):
     # What's the minimal confidence above it a box is considered valid for merging / contain other boxes
     cfg.POST_PROCESSING.VALID_CONFIDENCE = 0.15
 
-    # Thresholds for filtering printed
-    cfg.POST_PROCESSING.SCORE_THRESHOLD = 0.25
+    # Thresholds for filtering
+    cfg.POST_PROCESSING.DETECT_THRESHOLD = 0.25
+    cfg.POST_PROCESSING.TEXT_THRESHOLD = 0.25
 
     # Max angle difference between boxes, used for rotated boxes
     cfg.POST_PROCESSING.MAX_ANGLE_DIFF = 15

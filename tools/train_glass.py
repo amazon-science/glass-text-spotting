@@ -10,7 +10,8 @@ from detectron2.config import get_cfg
 from detectron2.engine import default_argument_parser, default_setup, launch
 from detectron2.utils.logger import setup_logger
 
-from glass.config import add_e2e_config, add_glass_config, add_dataset_config, merge_from_dataset_config
+from glass.config import add_e2e_config, add_glass_config, add_dataset_config, \
+    merge_from_dataset_config, add_post_process_config
 from glass.data.dataset_manager import DatasetManager
 from glass.engine.trainer import Trainer
 
@@ -23,6 +24,7 @@ def setup(args):
 
     add_e2e_config(cfg)
     add_glass_config(cfg)
+    add_post_process_config(cfg)
     add_dataset_config(cfg)
     merge_from_dataset_config(cfg, args.datasets)
 

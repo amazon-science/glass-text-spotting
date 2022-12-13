@@ -6,8 +6,8 @@ from detectron2.config import configurable
 from detectron2.modeling.meta_arch.build import META_ARCH_REGISTRY
 from detectron2.modeling.meta_arch.rcnn import GeneralizedRCNN
 from detectron2.structures import Instances
-from ...postprocess.post_processor import build_post_processor
-from ...postprocess.post_processor_academic import detector_postprocess
+from glass.postprocess import build_post_processor
+from glass.postprocess.post_processor_academic import detector_postprocess
 
 
 @META_ARCH_REGISTRY.register()

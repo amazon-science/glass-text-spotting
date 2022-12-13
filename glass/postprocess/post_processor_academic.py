@@ -2,14 +2,17 @@ from typing import Tuple
 
 import numpy as np
 import torch
-from detectron2.layers.nms import nms_rotated
-from glass.structures.boxes import Boxes, pairwise_ioa
-from detectron2.structures.instances import Instances
-from detectron2.utils.memory import retry_if_cuda_oom
 from torch.nn import functional as F
 
+from detectron2.layers.nms import nms_rotated
+from detectron2.structures.instances import Instances
+from detectron2.utils.memory import retry_if_cuda_oom
+from . import POST_PROCESSOR_REGISTRY
+from .post_processor_rotated_boxes import PostProcessorRotatedBoxes
 from ..modeling.recognition.text_encoder import TextEncoder
-from .post_processor_rotated_boxes import PostProcessorRotatedBoxes, POST_PROCESSOR_REGISTRY
+from ..structures.boxes import Boxes
+from ..structures.boxes import pairwise_ioa_rotated
+from ..evaluation.text_evaluator import get_instances_text
 
 
 @POST_PROCESSOR_REGISTRY.register()
@@ -17,10 +20,22 @@ class PostProcessorAcademic(PostProcessorRotatedBoxes):
 
     def __init__(self, cfg, *args, **kwargs):
         super().__init__(cfg, *args, **kwargs)
+        self.text_threshold = cfg.POST_PROCESSING.TEXT_THRESHOLD
         self.text_encoder = TextEncoder(cfg)
+
+    def __call__(self, preds, scale_ratio=1, **kwargs):
+        # Invoking the regular
+        preds = super().__call__(preds)
+
+        # Filtering out predictions based on the text threshold
+        texts, text_scores, _ = get_instances_text(preds.pred_text_prob, self.text_encoder)
+        preds = preds[torch.tensor(text_scores) >= self.text_threshold]
+
+        return preds
 
     @staticmethod
     def resize_boxes(preds: Instances, ratio: float, axis='both'):
+        print('shlompi')
         if len(preds) == 0:
             return preds
 
@@ -55,7 +70,7 @@ class PostProcessorAcademic(PostProcessorRotatedBoxes):
         if len(preds) == 0:
             return preds
         # These overlapping boxes we want to merge
-        ioa = pairwise_ioa(preds.pred_boxes, preds.pred_boxes)  # NxN symmetric IoA matrix
+        ioa = pairwise_ioa_rotated(preds.pred_boxes, preds.pred_boxes)  # NxN symmetric IoA matrix
         boxes = preds.pred_boxes.tensor
         scores = preds.scores
 
@@ -90,15 +105,9 @@ class PostProcessorAcademic(PostProcessorRotatedBoxes):
                                            boxes[overlapping_pairs[:, 0]],
                                            boxes[overlapping_pairs[:, 1]])
 
-        # max_area_valid_scores = torch.where((areas[overlapping_pairs[:, 0]] > areas[overlapping_pairs[:, 1]]),
-        #                              scores[overlapping_pairs[0]],
-        #                              scores[overlapping_pairs[1]])
-
         # Saving back the merged boxes
         preds.pred_boxes.tensor[overlapping_pairs[:, 0]] = max_area_valid_boxes.clone()
         preds.pred_boxes.tensor[overlapping_pairs[:, 1]] = max_area_valid_boxes.clone()
-        # preds.scores[overlapping_pairs[:, 0]] = max_area_valid_scores.clone()
-        # preds.scores[overlapping_pairs[:, 1]] = max_area_valid_scores.clone()
         # Finally we do NMS to drop the overlapping boxes with the lower confidence (hence the high threshold here)
         inds_to_keep = nms_rotated(preds.pred_boxes.tensor, preds.scores, iou_threshold=0.99)
         # noinspection PyTypeChecker
