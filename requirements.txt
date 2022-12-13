@@ -7,4 +7,5 @@ pyclipper
 imageio-ffmpeg
 polygon3
 plotly
+rasterio
 levenshtein

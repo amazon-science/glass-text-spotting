@@ -8,7 +8,7 @@ This is a PyTorch implementation of the following paper:
 Roi Ronen*, Shahar Tsiper*, Oron Anschel, Inbal Lavi, Amir Markovitz and R. Manmatha.
 
 [Paper](https://arxiv.org/pdf/2208.03364) 
-| [Pretrained Models](#Models-and-Configs) | 
+| [Pretrained Models](#Models-and-Configs)
 |  [Citation](#citation) | [Demo](#demo)
 
 ![Intro Figure](readme/architecture.png)
@@ -59,12 +59,11 @@ pip install -e .
 
 A Lab Collab demo is available for running inference:
 
-<h3 id="demo"> 
-    <a href="https://colab.research.google.com/github/amazon-science/glass-text-spotting/blob/master/glass_demo.ipynb" target="_parent">
-    Run Demo! <img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/>
+<h4 id="demo"> 
+    <a href="https://colab.research.google.com/github/amazon-science/glass-text-spotting/blob/master/demo/glass_demo.ipynb" target="_parent">
+    Glass Demo <img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/>
     </a> 
-</h3>
-
+</h4>
 
 ### Models and Configs
 
@@ -96,8 +95,6 @@ python ./tools/train_glass.py  \
    --resume <pretrained_weights_path> \
    --output <output_path>
 ```
-
-Additional fine-tuning configs would be uploaded in the near future
 
 ## Data
 
