@@ -69,7 +69,7 @@ class GlassRunner:
         self.text_encoder = TextEncoder(self.cfg)
         self.post_processor = build_post_processor(self.cfg)
 
-    def __call__(self, original_image: np.ndarray) -> Instances:
+    def __call__(self, image_tensor: np.ndarray) -> Instances:
         """
         Args:
             original_image (np.ndarray):
@@ -80,14 +80,15 @@ class GlassRunner:
                 See :doc:`/tutorials/models` for details about the format.
             original_image_tensor (torch.Tensor):
         """
-        if self.input_format == "RGB":
-            # whether the model expects BGR inputs or RGB
-            original_image = original_image[:, :, ::-1]
-        if self.input_format == "GREY":
-            original_image = rgb2grey(original_image, three_channels=True)
-        image_height, image_width = original_image.shape[:2]
+        # if self.input_format == "RGB":
+        #     # whether the model expects BGR inputs or RGB
+        #     original_image = original_image[:, :, ::-1]
+        # if self.input_format == "GREY":
+        #     original_image = rgb2grey(original_image, three_channels=True)
+        # image_height, image_width = original_image.shape[1:]
 
-        image_tensor, scale_ratio = self._image_to_tensor(original_image, self.model.device)
+        #image_tensor, scale_ratio = self._image_to_tensor(original_image, self.model.device)
+        image_tensor = image_tensor.to(device).to(torch.float32)
         height = image_tensor.shape[1]
         width = image_tensor.shape[2]
         inputs = {'image': image_tensor, 'height': height, 'width': width}
@@ -97,9 +98,9 @@ class GlassRunner:
         preds = raw_predictions['instances']
 
         # Scaling the predictions to the image domain
-        if scale_ratio != 1:
-            preds.pred_boxes.scale(1 / scale_ratio, 1 / scale_ratio)
-        preds._image_size = (image_height, image_width)
+        # if scale_ratio != 1:
+        #     preds.pred_boxes.scale(1 / scale_ratio, 1 / scale_ratio)
+        # preds._image_size = (image_height, image_width)
 
         self.logger.info(f'Detected {len(preds)} raw word instances')
 
@@ -128,7 +129,7 @@ class GlassRunner:
         :param str interpolation: Either 'nearest' or 'bilinear' are supported for interpolation algorithms
         :return: Both the resized image tensor, and the original image tensor
         """
-        height, width = original_image.shape[:2]
+        height, width = original_image.shape[1:]
 
         image_tensor = torch.as_tensor(original_image.transpose((2, 0, 1)))
         image_tensor = image_tensor.to(device).to(torch.float32)
